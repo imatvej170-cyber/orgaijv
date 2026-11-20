@@ -1,0 +1,291 @@
+<title>Фейковый друг</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@600;800&display=swap">
+<style>
+/* Layout: two columns on desktop — project brief on the left, the live bot in a phone-like chat on the right; on phones the chat comes first. */
+:root{
+  --bg:#eef1f4; --surface:#ffffff; --surface-2:#f5f7f9; --line:#d9dfe5;
+  --fg:#16202a; --muted:#5b6876;
+  --accent:#1f6feb; --accent-ink:#ffffff;
+  --scam:#c2410c; --scam-bg:#fff4ec;
+  --safe:#0f7b55; --safe-bg:#e8f6ef;
+  --hook:#b45309; --hook-bg:#fff7e0;
+  --me:#1f6feb; --me-ink:#ffffff;
+  --display:"Unbounded", "Segoe UI", system-ui, sans-serif;
+  --body:"Onest", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e141a; --surface:#151d25; --surface-2:#1b2530; --line:#2a3642;
+  --fg:#e6edf3; --muted:#93a1af; --accent:#4c8dff; --accent-ink:#081120;
+  --scam:#ff9a62; --scam-bg:#2a1a12; --safe:#4fd1a1; --safe-bg:#11271f;
+  --hook:#f5b54a; --hook-bg:#2a2110; --me:#3b7cf0; --me-ink:#ffffff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e141a; --surface:#151d25; --surface-2:#1b2530; --line:#2a3642;
+  --fg:#e6edf3; --muted:#93a1af; --accent:#4c8dff; --accent-ink:#081120;
+  --scam:#ff9a62; --scam-bg:#2a1a12; --safe:#4fd1a1; --safe-bg:#11271f;
+  --hook:#f5b54a; --hook-bg:#2a2110; --me:#3b7cf0; --me-ink:#ffffff; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px}
+.wrap{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);gap:40px;align-items:start}
+@media (max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}.brief{order:2}}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,4vw,40px);line-height:1.1;margin:0 0 12px;text-wrap:balance;letter-spacing:-.01em}
+h2{font-family:var(--display);font-weight:600;font-size:15px;margin:28px 0 10px;letter-spacing:.02em}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.lead{color:var(--muted);max-width:60ch;margin:0}
+.mods{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.mods li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start}
+.mods b{display:block}
+.mods span{color:var(--muted);font-size:14px}
+.hooks{display:flex;flex-wrap:wrap;gap:6px}
+.hooks span{background:var(--hook-bg);color:var(--hook);border-radius:999px;padding:3px 10px;font-size:13px}
+.note{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;margin-top:28px;max-width:60ch}
+
+/* chat */
+.phone{background:var(--surface);border:1px solid var(--line);border-radius:22px;overflow:hidden;display:flex;flex-direction:column;height:min(760px,calc(100vh - 48px));min-height:520px;position:sticky;top:24px}
+@media (max-width:860px){.phone{position:static;height:78vh}}
+.top{display:flex;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+.ava{width:38px;height:38px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:19px;flex:none}
+.top b{display:block;font-weight:600}
+.top small{color:var(--muted)}
+.top button{margin-left:auto;flex:none!important}
+.log{flex:1;overflow-y:auto;padding:16px 12px;display:flex;flex-direction:column;gap:8px;background:var(--surface-2)}
+.msg{max-width:88%;padding:9px 12px;border-radius:14px 14px 14px 4px;background:var(--surface);border:1px solid var(--line);white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.scam{background:var(--scam-bg);border-color:transparent;border-left:3px solid var(--scam)}
+.msg.scam .who{color:var(--scam);font-weight:600;font-size:13px;display:block;margin-bottom:2px}
+.msg.narr{align-self:center;background:transparent;border:1px dashed var(--line);color:var(--muted);font-size:14px;text-align:center;border-radius:10px}
+.msg.win{background:var(--safe-bg);border-color:transparent}
+.msg.lose{background:var(--hook-bg);border-color:transparent}
+.msg.me{align-self:flex-end;background:var(--me);color:var(--me-ink);border:none;border-radius:14px 14px 4px 14px}
+.kb{display:flex;flex-direction:column;gap:6px;max-width:88%}
+.kb .row{display:flex;gap:6px;flex-wrap:wrap}
+.kb button,.top button,.send{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--accent);padding:8px 12px;text-align:left;flex:1 1 auto}
+.kb button:hover:not(:disabled){border-color:var(--accent)}
+.kb button:disabled{color:var(--muted);cursor:default;opacity:.55}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.typing{color:var(--muted);font-size:13px;padding-left:4px}
+.bar{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);background:var(--surface)}
+.bar textarea{flex:1;resize:none;font:inherit;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface-2);color:var(--fg);min-width:0}
+.send{flex:none;background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.msg,.kb{animation:pop .18s ease-out}@keyframes pop{from{transform:translateY(4px);opacity:.4}to{transform:none;opacity:1}}}
+</style>
+
+<div class="wrap">
+  <section class="brief">
+    <div class="eyebrow">Кейс 2 · ИТ-форум «ИИ и цифровая безопасность»</div>
+    <h1>Фейковый друг</h1>
+    <p class="lead">Бот-тренажёр для мессенджера MAX. Тебе пишут «друзья», «банки» и «модераторы», а ты должен вовремя понять, что это обман. Ошибёшься — бот покажет, на какой крючок тебя поймали. Справа работающая копия бота: те же ситуации и та же логика.</p>
+
+    <h2>Модули</h2>
+    <ul class="mods">
+      <li><div>🎮</div><div><b>Тренировка</b><span>6 ветвящихся ситуаций, 45 концовок: от «друга в беде» до вербовки в дропперы.</span></div></li>
+      <li><div>🤖</div><div><b>Бой с ИИ-мошенником</b><span>GigaChat или YandexGPT играет мошенника по случайному сюжету, а ты отвечаешь своими словами. Работает только в самом боте.</span></div></li>
+      <li><div>🔍</div><div><b>Проверить сообщение</b><span>Перешли подозрительное сообщение: бот найдёт приёмы манипуляции и оценит риск.</span></div></li>
+      <li><div>🏆</div><div><b>Очки, звания, рейтинг</b><span>От «Новичка» до «Киберстража», плюс «слабое место»: на какой крючок попадаешься чаще всего.</span></div></li>
+    </ul>
+
+    <h2>Крючки, которым учит бот</h2>
+    <div class="hooks" id="hooklist"></div>
+
+    <p class="note">Это веб-копия для демонстрации. Прогресс хранится только в этом браузере. Сам бот работает в MAX без VPN и написан на Python без сторонних библиотек.</p>
+  </section>
+
+  <section class="phone" aria-label="Чат с ботом">
+    <div class="top">
+      <div class="ava" aria-hidden="true">🛡️</div>
+      <div><b>Фейковый друг</b><small>бот-тренажёр</small></div>
+      <button id="restart" type="button">↺ Сначала</button>
+    </div>
+    <div class="log" id="log" aria-live="polite"></div>
+    <form class="bar" id="bar">
+      <textarea id="input" rows="1" placeholder="Вставь подозрительное сообщение…"></textarea>
+      <button class="send" type="submit" aria-label="Отправить">➤</button>
+    </form>
+  </section>
+</div>
+
+<script>
+const SC = __SCENARIOS__;
+const HOOKS = __HOOKS__;
+const RANKS = [[0,"🐣 Новичок"],[20,"👀 Внимательный"],[60,"🕵️ Детектор обмана"],[100,"🛡️ Киберстраж"]];
+const MENU_BTN = [["🏠 Меню","menu"]];
+
+// ---------- хранение (только в этом браузере) ----------
+function loadUser(){ try{ const u = JSON.parse(localStorage.getItem("ff_user")); if(u) return u; }catch(e){} return {best:{},wins:0,losses:0,hooked_by:{}}; }
+let user = loadUser();
+function saveUser(){ try{ localStorage.setItem("ff_user", JSON.stringify(user)); }catch(e){} }
+const score = u => Object.values(u.best).reduce((a,b)=>a+b,0);
+const rankFor = s => RANKS.reduce((r,[t,n]) => s>=t ? n : r, RANKS[0][1]);
+
+let S = {mode:"idle"};
+const O = (text, buttons=[], kind="bot", who) => ({text, buttons, kind, who});
+
+// ---------- анализатор ----------
+const norm = s => s.toLowerCase().replace(/ё/g,"е");
+const LINK_RE = /(https?:\/\/|www\.|\b[a-z0-9-]+\.(ru|com|net|org|site|online|xyz|top|info|club|shop|pro|io|me|cc|click|link)\b)/i;
+const CARD_RE = /\b\d{4}[ -]?\d{4}[ -]?\d{4}[ -]?\d{4}\b/;
+function analyze(text){
+  const t = norm(text), found = {};
+  for(const [hid,h] of Object.entries(HOOKS)){
+    let hits = h.markers.filter(m => t.includes(norm(m)));
+    hits = hits.filter(m => !hits.some(o => o!==m && norm(o).includes(norm(m))));
+    if(hits.length) found[hid] = [...new Set(hits)];
+  }
+  if(LINK_RE.test(text)) (found.link = found.link||[]).push("ссылка в тексте");
+  if(CARD_RE.test(text)) (found.code = found.code||[]).push("номер карты");
+  const keys = Object.keys(found);
+  const sc = keys.reduce((a,k)=>a+HOOKS[k].weight,0);
+  let level = sc>=7?3:sc>=4?2:sc>=1?1:0;
+  if(found.code && ["urgency","authority","secrecy","fear"].some(k=>found[k])) level = Math.max(level,2);
+  if(found.secrecy && (found.code||found.greed)) level = 3;
+  keys.sort((a,b)=>HOOKS[b].weight-HOOKS[a].weight);
+  return {found:keys.map(k=>[k,found[k]]), level};
+}
+const VERDICTS = ["🟢 Явных признаков мошенничества не нашёл.\nНо если у тебя просят деньги или коды либо торопят, всё равно проверь через другой канал.",
+  "🟡 Есть подозрительные признаки. Будь осторожен.","🟠 Похоже на мошенничество!","🔴 Очень высокий риск! Это типичная схема мошенников."];
+function report(text){
+  const r = analyze(text);
+  let s = `🔍 **Результат проверки**\n\n${VERDICTS[r.level]}`;
+  if(r.found.length){
+    s += "\n\n🪝 **Найденные крючки:**\n" + r.found.map(([k,h])=>`${HOOKS[k].emoji} ${HOOKS[k].title}: ${h.slice(0,3).map(x=>`«${x}»`).join(", ")}`).join("\n");
+    s += `\n\n🛡️ **Что делать:** ${HOOKS[r.found[0][0]].defense}`;
+  }
+  return [O(s, [[["🔍 Проверить ещё","check"]], MENU_BTN], r.level>=2?"lose":"bot")];
+}
+
+// ---------- экраны ----------
+function menu(first){
+  const head = first ? "🛡️ **Фейковый друг** — тренажёр против интернет-мошенников.\n\nТебе будут писать «друзья», «банки» и «модераторы». Твоя задача — вовремя понять, что это обман. Ошибёшься — я покажу, на какой крючок тебя поймали.\n\n" : "";
+  return [O(head+"Выбирай, с чего начнём 👇", [[["🎮 Тренировка","play"],["🎲 Случайная ситуация","rand"]],[["🤖 Бой с ИИ-мошенником","ai"]],[["🔍 Проверить сообщение","check"]],[["🪝 Крючки мошенников","hooks"],["🏆 Мой профиль","me"]]])];
+}
+function listScenarios(){
+  const rows = Object.entries(SC).map(([id,s]) => [[`${user.best[id]!=null?"✅ ":""}${s.emoji} ${s.title} ${"⭐".repeat(s.difficulty)}`, "sc:"+id]]);
+  rows.push(MENU_BTN);
+  return [O(`🎮 **Выбери ситуацию**\nПройдено: ${Object.keys(user.best).length} из ${Object.keys(SC).length}. Звёзды — сложность.`, rows)];
+}
+function pickNext(){ const left = Object.keys(SC).filter(k=>user.best[k]==null); const pool = left.length?left:Object.keys(SC); return pool[Math.floor(Math.random()*pool.length)]; }
+const curStep = () => SC[S.sid].steps[S.step];
+const optButtons = st => st.options.map((o,i)=>[[o.text, `a:${S.sid}:${S.step}:${i}`]]);
+function renderStep(){
+  const sc = SC[S.sid], st = curStep(), outs = [];
+  if(st.narration) outs.push(O(st.narration,[],"narr"));
+  for(const m of st.messages||[]) outs.push(O(m,[],"scam",st.who||sc.who));
+  for(const h of st.hooks||[]) if(!S.seen.includes(h)) S.seen.push(h);
+  outs[outs.length-1].buttons = optButtons(st);
+  return outs;
+}
+function startScenario(id){
+  const sc = SC[id]; S = {mode:"scenario", sid:id, step:sc.start, depth:0, seen:[]};
+  return [O(`${sc.emoji} **${sc.title}**\n\n🎭 ${sc.intro}\n\nЧитай внимательно и выбери ответ.`)].concat(renderStep());
+}
+function answer(sid, stid, i){
+  if(S.mode!=="scenario"||S.sid!==sid||S.step!==stid) return [];
+  const o = curStep().options[i];
+  if(o.result==="next"){ S.step=o.goto; S.depth++; return (o.comment?[O("💭 "+o.comment)]:[]).concat(renderStep()); }
+  const sc = SC[S.sid]; let res, kind;
+  if(o.result==="safe"){
+    const pts = 10+5*sc.difficulty+(S.depth===0?5:0);
+    user.best[S.sid] = Math.max(user.best[S.sid]||0, pts); user.wins++;
+    res = `✅ **Ты не попался!**\n\n${o.explain}\n\n🏅 +${pts} очков${S.depth===0?" (+5 за мгновенную реакцию ⚡)":""}`; kind="win";
+  } else {
+    const h = HOOKS[o.hook]||{}; user.losses++; user.hooked_by[o.hook]=(user.hooked_by[o.hook]||0)+1;
+    res = `🎣 **Тебя поймали на крючок: ${h.emoji} ${h.title}**\n\n${o.explain}\n\n🛡️ **Как защититься:** ${h.defense}`; kind="lose";
+  }
+  saveUser();
+  const sum = `**Разбор ситуации**\n\n${sc.red_flags.map(f=>"🚩 "+f).join("\n")}\n\n🪝 **Приёмы мошенника:** ${S.seen.map(h=>HOOKS[h].emoji+" "+HOOKS[h].title).join(", ")}`;
+  const sid0 = S.sid; S = {mode:"idle"};
+  return [O(res,[],kind), O(sum, [[["▶️ Следующая ситуация","rand"],["🔁 Ещё раз","sc:"+sid0]], MENU_BTN])];
+}
+function listHooks(){
+  const it = Object.entries(HOOKS), rows=[];
+  for(let i=0;i<it.length;i+=2) rows.push(it.slice(i,i+2).map(([k,h])=>[`${h.emoji} ${h.title}`,"hk:"+k]));
+  rows.push(MENU_BTN);
+  return [O("🪝 **Крючки мошенников**\nЭти приёмы социальной инженерии используют в переписке. Нажми, чтобы узнать подробнее.", rows)];
+}
+function showHook(k){ const h=HOOKS[k]; return [O(`${h.emoji} **${h.title}**\n\n${h.short}\n\n🧠 **Как это работает:** ${h.how}\n\n🛡️ **Как защититься:** ${h.defense}`, [[["⬅️ Все крючки","hooks"]], MENU_BTN])]; }
+function profile(){
+  const s = score(user), next = RANKS.map(r=>r[0]).find(t=>t>s);
+  let txt = `🏆 **Твой профиль**\n\nЗвание: ${rankFor(s)}\nОчки бдительности: ${s}\nСитуаций пройдено: ${Object.keys(user.best).length} из ${Object.keys(SC).length}\nРаскусил мошенника: ${user.wins} раз · попался: ${user.losses} раз`;
+  if(next!=null) txt += `\nДо следующего звания: ${next-s} очков`;
+  const rows = [[["🎲 Тренироваться","rand"]], MENU_BTN];
+  const weak = Object.entries(user.hooked_by).sort((a,b)=>b[1]-a[1])[0];
+  if(weak && HOOKS[weak[0]]){ const h=HOOKS[weak[0]]; txt += `\n\n⚠️ Чаще всего тебя ловят на крючок **${h.emoji} ${h.title}**. Почитай, как от него защищаться.`; rows.unshift([[`${h.emoji} Про «${h.title}»`,"hk:"+weak[0]]]); }
+  return [O(txt, rows)];
+}
+
+function onCallback(p){
+  const a = p.split(":");
+  if(a[0]==="a") return answer(a[1],a[2],+a[3]);
+  if(a[0]==="menu"){ S={mode:"idle"}; return menu(); }
+  if(a[0]==="play") return listScenarios();
+  if(a[0]==="rand") return startScenario(pickNext());
+  if(a[0]==="sc") return startScenario(a[1]);
+  if(a[0]==="hooks") return listHooks();
+  if(a[0]==="hk") return showHook(a[1]);
+  if(a[0]==="me") return profile();
+  if(a[0]==="check"){ S={mode:"check"}; return [O("🔍 Вставь сюда текст подозрительного сообщения, и я разберу его на крючки.\n\nНапример: «Привет, это служба поддержки. Срочно пришли код из СМС, иначе аккаунт заблокируют»", [MENU_BTN])]; }
+  if(a[0]==="ai") return [O("🤖 **Бой с ИИ-мошенником** работает в самом боте в MAX: там нейросеть (GigaChat или YandexGPT) пишет тебе как мошенник, а ты отвечаешь своими словами.\n\nВ этой веб-копии нейросети нет. Попробуй тренировку на готовых ситуациях!", [[["🎮 Тренировка","play"]], MENU_BTN])];
+  return menu();
+}
+function onText(t){
+  if(S.mode==="scenario") return [O("В тренировке отвечай кнопками 👇", optButtons(curStep()))];
+  if(S.mode==="check" || t.length>=25){ S={mode:"idle"}; return report(t); }
+  return menu();
+}
+
+// ---------- отрисовка ----------
+const log = document.getElementById("log");
+const esc = s => s.replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const md = s => esc(s).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>");
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let playing = false;
+function bubble(o){
+  const d = document.createElement("div"); d.className = "msg " + o.kind;
+  d.innerHTML = (o.kind==="scam" ? `<span class="who">💬 ${esc(o.who)}</span>` : "") + md(o.text);
+  log.appendChild(d);
+  if(o.buttons && o.buttons.length){
+    const kb = document.createElement("div"); kb.className="kb";
+    for(const row of o.buttons){
+      const r = document.createElement("div"); r.className="row";
+      for(const [label,payload] of row){
+        const b = document.createElement("button"); b.type="button"; b.textContent=label;
+        b.addEventListener("click", ()=>{
+          if(playing) return;
+          kb.querySelectorAll("button").forEach(x=>x.disabled=true);
+          const outs = onCallback(payload);
+          if(payload.startsWith("a:") && outs.length) say(label);
+          play(outs);
+        });
+        r.appendChild(b);
+      }
+      kb.appendChild(r);
+    }
+    log.appendChild(kb);
+  }
+  log.scrollTop = log.scrollHeight;
+}
+function say(t){ const d=document.createElement("div"); d.className="msg me"; d.textContent=t; log.appendChild(d); log.scrollTop=log.scrollHeight; }
+async function play(outs){
+  playing = true;
+  try{
+    for(const o of outs){
+      if(!reduce && o.kind==="scam"){
+        const ty=document.createElement("div"); ty.className="typing"; ty.textContent=`${o.who} печатает…`; log.appendChild(ty); log.scrollTop=log.scrollHeight;
+        await new Promise(r=>setTimeout(r, Math.min(1400, 400 + o.text.length*8))); ty.remove();
+      } else if(!reduce) await new Promise(r=>setTimeout(r,250));
+      bubble(o);
+    }
+  } finally { playing = false; }
+}
+document.getElementById("bar").addEventListener("submit", e=>{
+  e.preventDefault(); const inp=document.getElementById("input"); const t=inp.value.trim(); if(!t) return;
+  if(playing) return;
+  inp.value=""; say(t); play(onText(t));
+});
+document.getElementById("input").addEventListener("keydown", e=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); document.getElementById("bar").requestSubmit(); }});
+document.getElementById("restart").addEventListener("click", ()=>{ log.innerHTML=""; S={mode:"idle"}; play(menu(true)); });
+document.getElementById("hooklist").innerHTML = Object.values(HOOKS).map(h=>`<span>${h.emoji} ${esc(h.title)}</span>`).join("");
+// стартовый экран показываем сразу, без анимации
+menu(true).forEach(bubble);
+</script>
