@@ -1,0 +1,11 @@
+{
+  "max_token": "f9LHodD0cOKnkptWdfemBWamb3Lr9dabmZog0hPQdx6Rz5E6lHabyjQAtqDTNpoDNfbj4ElZZKEtmfbAxOb3",
+
+  "ai_provider": "gigachat",
+  "gigachat_auth_key": "MDFhMWVmMDEtMTU5OC03ZTcxLWEwM2YtZTk0MmQ5MzM2OTEyOmU3MDEwY2U4LWRlN2UtNGE5NS05ZTdmLTJmYWMzNDk5YWU2NQ==",
+  "gigachat_scope": "GIGACHAT_API_PERS",
+
+  "yandex_api_key": "",
+  "yandex_folder_id": "",
+  "yandex_model": "yandexgpt-lite"
+}
